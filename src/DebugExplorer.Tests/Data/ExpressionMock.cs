@@ -1,18 +1,12 @@
 ﻿using EnvDTE;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DebugExplorer.Tests.Data
 {
-	public class ExpressionMock : EnvDTE.Expression
+	public class ExpressionMock : Expression
 	{
-		public string Name { get; private set; }
+		public string Name { get; }
 
-		public string Type { get; private set; }
+		public string Type { get; }
 
 		public Expressions DataMembers { get; }
 
@@ -26,8 +20,9 @@ namespace DebugExplorer.Tests.Data
 
 		public Expressions Collection { get; }
 
-		public ExpressionMock(object value)
+		public ExpressionMock(string name, object value)
 		{
+			this.Name = name;
 			this.Value = value.ToString();
 			this.Type = value.GetType().Name;
 		}
@@ -40,14 +35,11 @@ namespace DebugExplorer.Tests.Data
 				case ushort:
 				case int:
 				case uint:
-					return new ExpressionMock(value);
 				case string:
-					return new ExpressionMock(value);
+					return new ExpressionMock(name, value);
 				default:
-					break;
+					throw new Exception();
 			}
-
-			return null;
 		}
 
 		public override string ToString()

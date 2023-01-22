@@ -1,5 +1,8 @@
-﻿using EnvDTE;
+﻿using DebugExplorer.ObjectWrappers;
+using EnvDTE;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -29,11 +32,11 @@ namespace DebugExplorer
 				return;
 			}
 
-			JObjectGenerator generator = new JObjectGenerator();
 			foreach (Expression local in dte.Debugger.CurrentStackFrame.Locals)
 			{
-				var json = generator.Generate(local);
-				Debug.WriteLine(json);
+				var wrapper = new ExpressionWrapper(local);
+				//var json = generator.Generate(local);
+				//Debug.WriteLine(json);
 			}
 		}
 	}

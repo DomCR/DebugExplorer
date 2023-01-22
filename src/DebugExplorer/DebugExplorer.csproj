@@ -46,8 +46,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ExpressionHolder.cs" />
-    <Compile Include="JObjectGenerator.cs" />
+    <Compile Include="ObjectWrappers\ExpressionWrapper.cs" />
     <Compile Include="ObjectExplorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DebugExplorerPackage.cs" />
