@@ -14,7 +14,9 @@ namespace DebugExplorer.ObjectWrappers
 
 		public List<ExpressionWrapper> Collection { get; } = new List<ExpressionWrapper>();
 
-		public List<ExpressionWrapper> DataMembers { get; } = new List<ExpressionWrapper>();
+		public List<ExpressionWrapper> DataMembers { get; private set; } = new List<ExpressionWrapper>();
+
+		private Expression expression;
 
 		public ExpressionWrapper(Expression expression)
 		{
@@ -22,9 +24,18 @@ namespace DebugExplorer.ObjectWrappers
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
 #endif
 
+			this.expression = expression;
+
 			this.Name = expression.Name;
 			this.Type = expression.Type;
 			this.Value = expression.Value;
+		}
+
+		public void ProcessDataMembers()
+		{
+#if !TEST_ENV
+			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
+#endif
 
 			if (expression.Collection != null)
 			{

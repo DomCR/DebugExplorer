@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -26,13 +25,14 @@ namespace DebugExplorer
 	/// </remarks>
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[Guid(DebugExplorerPackage.PackageGuidString)]
-	[ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
+	[ProvideMenuResource("Menus.ctmenu", 1)]
+	[ProvideToolWindow(typeof(LocalsExporter))]
 	public sealed class DebugExplorerPackage : AsyncPackage
 	{
 		/// <summary>
 		/// DebugExplorerPackage GUID string.
 		/// </summary>
-		public const string PackageGuidString = "623458cc-2fe8-41da-a715-617d8032b5bb";
+		public const string PackageGuidString = "d7e31a03-9333-4e10-9661-81f38d1b2628";
 
 		#region Package Members
 
@@ -48,8 +48,7 @@ namespace DebugExplorer
 			// When initialized asynchronously, the current thread may be a background thread at this point.
 			// Do any initialization that requires the UI thread after switching to the UI thread.
 			await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-			await ObjectExplorer.InitializeAsync(this);
+		    await LocalsExporterCommand.InitializeAsync(this);
 		}
 
 		#endregion
