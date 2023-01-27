@@ -3,7 +3,9 @@ using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -12,13 +14,25 @@ namespace DebugExplorer
 	/// <summary>
 	/// Interaction logic for LocalsExporterControl.
 	/// </summary>
-	public partial class LocalsExporterControl : UserControl
+	public partial class LocalsExporterControl : UserControl, INotifyPropertyChanged
 	{
 		private static DebuggerEvents _debuggerEvents;
 
+		public event PropertyChangedEventHandler PropertyChanged;
+
 		public ObservableCollection<ExpressionWrapper> ExpressionWrappers { get; } = new ObservableCollection<ExpressionWrapper>();
 
-		public string JsonText { get; private set; }
+		public string JsonText
+		{
+			get { return this._jsonText; }
+			private set
+			{
+				this._jsonText = value;
+				this.notifyPropertyChanged();
+			}
+		}
+
+		public string _jsonText;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LocalsExporterControl"/> class.
@@ -33,20 +47,6 @@ namespace DebugExplorer
 			DTE dte = (DTE)Package.GetGlobalService(typeof(DTE));
 			_debuggerEvents = dte.Events.DebuggerEvents;
 			_debuggerEvents.OnEnterBreakMode += debuggerEvents_OnEnterBreakMode;
-		}
-
-		/// <summary>
-		/// Handles click on the button by displaying a message box.
-		/// </summary>
-		/// <param name="sender">The event sender.</param>
-		/// <param name="e">The event args.</param>
-		[SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions", Justification = "Sample code")]
-		[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Default event handler naming pattern")]
-		private void button1_Click(object sender, RoutedEventArgs e)
-		{
-			MessageBox.Show(
-				string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Invoked '{0}'", this.ToString()),
-				"LocalsExporter");
 		}
 
 		private void debuggerEvents_OnEnterBreakMode(dbgEventReason reason, ref dbgExecutionAction executionAction)
@@ -65,6 +65,21 @@ namespace DebugExplorer
 			{
 				this.ExpressionWrappers.Add(new ExpressionWrapper(local));
 			}
+		}
+
+		private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			ListView ls = sender as ListView;
+			ExpressionWrapper selected = ls.SelectedItem as ExpressionWrapper;
+
+			if (selected == null) { return; }
+
+			this.JsonText = selected.JsonFomrat();
+		}
+
+		private void notifyPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }

@@ -4,13 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vsshell="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+             xmlns:toolkit="clr-namespace:Community.VisualStudio.Toolkit;assembly=Community.VisualStudio.Toolkit"
              mc:Ignorable="d"
+             toolkit:Themes.UseVsTheme="True"
              d:DesignHeight="300" d:DesignWidth="300"
 			 DataContext="{Binding RelativeSource={RelativeSource Self}}"
 			 Name="MyToolWindow">
 	<Grid>
 		<StackPanel Orientation="Horizontal">
-			<ListView ItemsSource="{Binding ExpressionWrappers}">
+			<ListView ItemsSource="{Binding ExpressionWrappers}" SelectionChanged="listView_SelectionChanged">
 				<ListView.View>
 					<GridView>
 						<GridViewColumn Header="Name" Width="120" DisplayMemberBinding="{Binding Name}" />

@@ -53,5 +53,10 @@ namespace DebugExplorer.ObjectWrappers
 				}
 			}
 		}
+
+		public string JsonFomrat()
+		{
+			return "Json Placeholder";
+		}
 	}
 }
