@@ -1,6 +1,9 @@
 ﻿using EnvDTE;
+using Microsoft.VisualStudio.OLE.Interop;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DebugExplorer.ObjectWrappers
 {
@@ -12,6 +15,29 @@ namespace DebugExplorer.ObjectWrappers
 
 		public string Value { get; }
 
+		public bool IsPrimitive
+		{
+			get
+			{
+				switch (Type)
+				{
+					case nameof(System.String):
+					case nameof(System.Byte):
+					case nameof(System.Int16):
+					case nameof(System.UInt16):
+					case nameof(System.Int32):
+					case nameof(System.UInt32):
+					case nameof(System.Int64):
+					case nameof(System.UInt64):
+					case nameof(System.Double):
+					case nameof(System.Single):
+						return true;
+					default:
+						return false;
+				}
+			}
+		}
+
 		public List<ExpressionWrapper> Collection { get; } = new List<ExpressionWrapper>();
 
 		public List<ExpressionWrapper> DataMembers { get; private set; } = new List<ExpressionWrapper>();
@@ -20,9 +46,7 @@ namespace DebugExplorer.ObjectWrappers
 
 		public ExpressionWrapper(Expression expression)
 		{
-#if !TEST_ENV
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-#endif
 
 			this._expression = expression;
 
@@ -33,9 +57,7 @@ namespace DebugExplorer.ObjectWrappers
 
 		public void ProcessDataMembers()
 		{
-#if !TEST_ENV
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-#endif
 
 			if (_expression.Collection != null)
 			{
@@ -56,7 +78,33 @@ namespace DebugExplorer.ObjectWrappers
 
 		public string JsonFomrat()
 		{
+			if (this.IsPrimitive)
+			{
+				if (this.Type.Equals(nameof(System.String)))
+				{
+					return $"\"{this.Value}\"";
+				}
+
+				return this.Value;
+			}
+
 			return "Json Placeholder";
+		}
+
+		public JToken ToJsonToken()
+		{
+			if (this.IsPrimitive)
+			{
+				return new JValue(this.Value);
+			}
+
+			JObject jobject = new JObject();
+			foreach (var item in this.DataMembers)
+			{
+				jobject.Add(item.Name, item.ToJsonToken());
+			}
+
+			return jobject;
 		}
 	}
 }

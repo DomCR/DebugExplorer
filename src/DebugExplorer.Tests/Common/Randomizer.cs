@@ -16,8 +16,10 @@ namespace DebugExplorer.Tests.Common
 
 			switch (value)
 			{
+				case byte:
+					return (T)Convert.ChangeType(this.Next(byte.MinValue, byte.MaxValue), typeof(T));
 				case short:
-					break;
+					return (T)Convert.ChangeType(this.Next(short.MinValue, short.MaxValue), typeof(T));
 			}
 
 			return value;
