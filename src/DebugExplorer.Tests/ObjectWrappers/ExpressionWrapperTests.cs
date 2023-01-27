@@ -1,6 +1,7 @@
 using DebugExplorer.ObjectWrappers;
 using DebugExplorer.Tests.Common;
 using DebugExplorer.Tests.Data;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 
 namespace DebugExplorer.Tests.ObjectWrappers
@@ -23,9 +24,14 @@ namespace DebugExplorer.Tests.ObjectWrappers
 
 		[Theory]
 		[MemberData(nameof(PrimitiveVariables))]
-		public void GenerateTest(ExpressionMock mock)
+		public async Task PrimitiveTestAsync(ExpressionMock mock)
 		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			ExpressionWrapper generator = new ExpressionWrapper(mock);
+			string json = generator.JsonFomrat();
+
+			Assert.Equal(mock.JsonFomrat, json);
 		}
 	}
 }

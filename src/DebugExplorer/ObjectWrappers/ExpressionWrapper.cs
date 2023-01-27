@@ -16,7 +16,7 @@ namespace DebugExplorer.ObjectWrappers
 
 		public List<ExpressionWrapper> DataMembers { get; private set; } = new List<ExpressionWrapper>();
 
-		private Expression expression;
+		private Expression _expression;
 
 		public ExpressionWrapper(Expression expression)
 		{
@@ -24,7 +24,7 @@ namespace DebugExplorer.ObjectWrappers
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
 #endif
 
-			this.expression = expression;
+			this._expression = expression;
 
 			this.Name = expression.Name;
 			this.Type = expression.Type;
@@ -37,17 +37,17 @@ namespace DebugExplorer.ObjectWrappers
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
 #endif
 
-			if (expression.Collection != null)
+			if (_expression.Collection != null)
 			{
-				foreach (Expression item in expression.Collection)
+				foreach (Expression item in _expression.Collection)
 				{
 					//this.Collection.Add(new ExpressionWrapper(item));
 				}
 			}
 
-			if (expression.DataMembers != null && this.Value != "null")
+			if (_expression.DataMembers != null && this.Value != "null")
 			{
-				foreach (Expression item in expression.DataMembers)
+				foreach (Expression item in _expression.DataMembers)
 				{
 					this.DataMembers.Add(new ExpressionWrapper(item));
 				}
