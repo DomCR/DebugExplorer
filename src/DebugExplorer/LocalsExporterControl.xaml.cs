@@ -74,6 +74,7 @@ namespace DebugExplorer
 
 			if (selected == null) { return; }
 
+			selected.ProcessDataMembers();
 			this.JsonText = selected.JsonFomrat();
 		}
 

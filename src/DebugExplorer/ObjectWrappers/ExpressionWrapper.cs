@@ -63,6 +63,9 @@ namespace DebugExplorer.ObjectWrappers
 			{
 				foreach (Expression item in _expression.Collection)
 				{
+					var s = item.Name;
+					var v = item.Value;
+					var t = item.Type;
 					//this.Collection.Add(new ExpressionWrapper(item));
 				}
 			}
@@ -88,7 +91,8 @@ namespace DebugExplorer.ObjectWrappers
 				return this.Value;
 			}
 
-			return "Json Placeholder";
+			JObject jobject = (JObject)this.ToJsonToken();
+			return jobject.ToString();
 		}
 
 		public JToken ToJsonToken()

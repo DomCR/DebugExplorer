@@ -1,6 +1,6 @@
 using DebugExplorer.ObjectWrappers;
 using DebugExplorer.Tests.Common;
-using DebugExplorer.Tests.Data;
+using DebugExplorer.Tests.Mocks;
 using Microsoft.VisualStudio.Sdk.TestFramework;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
@@ -10,20 +10,11 @@ namespace DebugExplorer.Tests.ObjectWrappers
 	[Collection(MockedVS.Collection)]
 	public class ExpressionWrapperTests
 	{
-		public static TheoryData<ExpressionMock> PrimitiveVariables { get; }
-
 		public static TheoryData<Type, object> Primitives { get; }
 
 		static ExpressionWrapperTests()
 		{
 			Randomizer rand = new Randomizer(0);
-
-			PrimitiveVariables = new TheoryData<ExpressionMock>
-			{
-				ExpressionMock.CreatePrimitive<short>(rand.RandomString(3), rand.Next<short>()),
-				ExpressionMock.CreatePrimitive<int>(),
-				ExpressionMock.CreatePrimitive(value: "this is a random value")
-			};
 
 			Primitives = new TheoryData<Type, object>
 			{
@@ -46,18 +37,6 @@ namespace DebugExplorer.Tests.ObjectWrappers
 		}
 
 		[Theory]
-		[MemberData(nameof(PrimitiveVariables), Skip = "Not serialized")]
-		public async Task PrimitiveVariablesTestAsync(ExpressionMock mock)
-		{
-			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			ExpressionWrapper generator = new ExpressionWrapper(mock);
-			string json = generator.JsonFomrat();
-
-			Assert.Equal(mock.JsonFomrat, json);
-		}
-
-		[Theory]
 		[MemberData(nameof(Primitives))]
 		public async Task PrimitiveTestAsync(Type t, object value)
 		{
@@ -68,6 +47,26 @@ namespace DebugExplorer.Tests.ObjectWrappers
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
 
 			Assert.True(wrapper.IsPrimitive);
+			Assert.Equal(mock.JsonFomrat, wrapper.JsonFomrat());
+		}
+
+		[Fact]
+		public async Task SimpleObjectTestAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Person p = new Person();
+			p.Name = "person_name";
+			p.Surname = "person_surname";
+
+			ExpressionMock mock = new ExpressionMock(p);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+			wrapper.ProcessDataMembers();
+
+			JObject jo = (JObject)wrapper.ToJsonToken();
+
+			Assert.False(wrapper.IsPrimitive);
 			Assert.Equal(mock.JsonFomrat, wrapper.JsonFomrat());
 		}
 	}
