@@ -9,11 +9,13 @@ namespace DebugExplorer.ObjectWrappers
 {
 	public class ExpressionWrapper
 	{
+		public const string NullToken = "null";
+
 		public string Name { get; }
 
 		public string Type { get; }
 
-		public string Value { get; }
+		public string ValueAsString { get; }
 
 		public bool IsPrimitive
 		{
@@ -52,7 +54,7 @@ namespace DebugExplorer.ObjectWrappers
 
 			this.Name = expression.Name;
 			this.Type = expression.Type;
-			this.Value = expression.Value;
+			this.ValueAsString = expression.Value;
 		}
 
 		public void ProcessDataMembers()
@@ -70,12 +72,46 @@ namespace DebugExplorer.ObjectWrappers
 				}
 			}
 
-			if (_expression.DataMembers != null && this.Value != "null")
+			if (_expression.DataMembers != null && this.ValueAsString.Equals(NullToken, StringComparison.OrdinalIgnoreCase))
 			{
 				foreach (Expression item in _expression.DataMembers)
 				{
 					this.DataMembers.Add(new ExpressionWrapper(item));
 				}
+			}
+		}
+
+		public object GetValue()
+		{
+			if (this.ValueAsString is null || this.ValueAsString.Equals(NullToken, StringComparison.OrdinalIgnoreCase))
+			{
+				return null;
+			}
+
+			switch (Type)
+			{
+				case nameof(System.String):
+					return this.ValueAsString;
+				case nameof(System.Byte):
+					return byte.Parse(this.ValueAsString);
+				case nameof(System.Int16):
+					return short.Parse(this.ValueAsString);
+				case nameof(System.UInt16):
+					return ushort.Parse(this.ValueAsString);
+				case nameof(System.Int32):
+					return int.Parse(this.ValueAsString);
+				case nameof(System.UInt32):
+					return uint.Parse(this.ValueAsString);
+				case nameof(System.Int64):
+					return long.Parse(this.ValueAsString);
+				case nameof(System.UInt64):
+					return ulong.Parse(this.ValueAsString);
+				case nameof(System.Double):
+					return double.Parse(this.ValueAsString);
+				case nameof(System.Single):
+					return float.Parse(this.ValueAsString);
+				default:
+					return null;
 			}
 		}
 
@@ -85,10 +121,10 @@ namespace DebugExplorer.ObjectWrappers
 			{
 				if (this.Type.Equals(nameof(System.String)))
 				{
-					return $"\"{this.Value}\"";
+					return $"\"{this.ValueAsString}\"";
 				}
 
-				return this.Value;
+				return this.ValueAsString;
 			}
 
 			JObject jobject = (JObject)this.ToJsonToken();
@@ -99,7 +135,7 @@ namespace DebugExplorer.ObjectWrappers
 		{
 			if (this.IsPrimitive)
 			{
-				return new JValue(this.Value);
+				return new JValue(this.ValueAsString);
 			}
 
 			JObject jobject = new JObject();

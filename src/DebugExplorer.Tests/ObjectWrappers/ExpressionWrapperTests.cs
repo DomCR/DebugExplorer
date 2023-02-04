@@ -3,6 +3,7 @@ using DebugExplorer.Tests.Common;
 using DebugExplorer.Tests.Mocks;
 using Microsoft.VisualStudio.Sdk.TestFramework;
 using Microsoft.VisualStudio.Shell;
+using Moq;
 using Newtonsoft.Json.Linq;
 
 namespace DebugExplorer.Tests.ObjectWrappers
@@ -27,8 +28,10 @@ namespace DebugExplorer.Tests.ObjectWrappers
 				{typeof(ulong), rand.Next<ulong>() },
 				{typeof(double), rand.Next<double>() },
 				{typeof(float), rand.Next<float>() },
-				{typeof(string), rand.RandomString(10) }
-		};
+				{typeof(string), rand.RandomString(10) },
+				{typeof(string), null },
+				{typeof(string), "null" }
+			};
 		}
 
 		public ExpressionWrapperTests(GlobalServiceProvider sp)
@@ -47,7 +50,23 @@ namespace DebugExplorer.Tests.ObjectWrappers
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
 
 			Assert.True(wrapper.IsPrimitive);
+			Assert.Equal(t.Name, wrapper.Type);
 			Assert.Equal(mock.JsonFomrat, wrapper.JsonFomrat());
+		}
+
+		[Theory]
+		[MemberData(nameof(Primitives))]
+		public async Task GetValueTestAsync(Type t, object value)
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			ExpressionMock mock = new ExpressionMock("my_prop", value);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+
+			Assert.True(wrapper.IsPrimitive);
+			Assert.Equal(t.Name, wrapper.Type);
+			Assert.Equal(mock.OriginalValue, wrapper.GetValue());
 		}
 
 		[Fact]

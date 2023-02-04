@@ -27,6 +27,8 @@ namespace DebugExplorer.Tests.Mocks
 
 		public string JsonFomrat { get; }
 
+		public object OriginalValue { get; }
+
 		private ExpressionsCollectionMock _dataMembers = new ExpressionsCollectionMock();
 
 		[Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
@@ -38,6 +40,7 @@ namespace DebugExplorer.Tests.Mocks
 		{
 			this.Name = name;
 			this.Value = value?.ToString();
+			this.OriginalValue = value;
 			this.Type = value?.GetType().Name;
 			this.JsonFomrat = JsonConvert.SerializeObject(value);
 		}
