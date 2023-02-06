@@ -15,5 +15,11 @@ namespace DebugExplorer.Tests.Mocks
 		public int Age { get; set; }
 
 		public double Amount { get; set; }
+
+		public List<string> Tags { get; set; } = new List<string>();
+
+		public List<Person> Family { get; set; } = new List<Person>();
+
+		public Dictionary<int, string> Ids { get; set; } = new Dictionary<int, string>();
 	}
 }

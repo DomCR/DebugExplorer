@@ -1,15 +1,22 @@
 ﻿using EnvDTE;
-using Microsoft.VisualStudio.OLE.Interop;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DebugExplorer.ObjectWrappers
 {
 	public class ExpressionWrapper
 	{
 		public const string NullToken = "null";
+
+		private static int _maxDepth = 100;
+
+		private Regex _collectionFormat = new Regex("Count = \\d+");
 
 		public string Name { get; }
 
@@ -23,6 +30,7 @@ namespace DebugExplorer.ObjectWrappers
 			{
 				switch (Type)
 				{
+					case "string":
 					case nameof(System.String):
 					case nameof(System.Byte):
 					case nameof(System.Int16):
@@ -39,6 +47,10 @@ namespace DebugExplorer.ObjectWrappers
 				}
 			}
 		}
+
+		public bool IsNull { get { return this.ValueAsString.Equals("null"); } }
+
+		public bool IsCollection { get { return _collectionFormat.IsMatch(this.ValueAsString); } }
 
 		public List<ExpressionWrapper> Collection { get; } = new List<ExpressionWrapper>();
 
@@ -57,8 +69,15 @@ namespace DebugExplorer.ObjectWrappers
 			this.ValueAsString = expression.Value;
 		}
 
-		public void ProcessDataMembers()
+		public void ProcessDataMembers(int depth = 0)
 		{
+			if (depth > _maxDepth)
+			{
+				return;
+			}
+
+			this.DataMembers.Clear();
+
 			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
 
 			if (_expression.Collection != null)
@@ -72,11 +91,14 @@ namespace DebugExplorer.ObjectWrappers
 				}
 			}
 
-			if (_expression.DataMembers != null && this.ValueAsString.Equals(NullToken, StringComparison.OrdinalIgnoreCase))
+			if (_expression.DataMembers != null && !this.ValueAsString.Equals(NullToken, StringComparison.OrdinalIgnoreCase))
 			{
 				foreach (Expression item in _expression.DataMembers)
 				{
-					this.DataMembers.Add(new ExpressionWrapper(item));
+					ExpressionWrapper member = new ExpressionWrapper(item);
+
+					this.DataMembers.Add(member);
+					member.ProcessDataMembers(depth + 1);
 				}
 			}
 		}
@@ -90,8 +112,10 @@ namespace DebugExplorer.ObjectWrappers
 
 			switch (Type)
 			{
+				case "string":
 				case nameof(System.String):
-					return this.ValueAsString;
+					string value = this.ValueAsString.Remove(0, 1).Remove(this.ValueAsString.Length - 2);
+					return value;
 				case nameof(System.Byte):
 					return byte.Parse(this.ValueAsString);
 				case nameof(System.Int16):
@@ -119,12 +143,13 @@ namespace DebugExplorer.ObjectWrappers
 		{
 			if (this.IsPrimitive)
 			{
-				if (this.Type.Equals(nameof(System.String)))
-				{
-					return $"\"{this.ValueAsString}\"";
-				}
+				StringBuilder sb = new StringBuilder();
+				StringWriter sw = new StringWriter(sb);
+				JsonWriter jsonWriter = new JsonTextWriter(sw);
 
-				return this.ValueAsString;
+				jsonWriter.WriteValue(GetValue());
+
+				return sb.ToString();
 			}
 
 			JObject jobject = (JObject)this.ToJsonToken();
@@ -135,13 +160,31 @@ namespace DebugExplorer.ObjectWrappers
 		{
 			if (this.IsPrimitive)
 			{
-				return new JValue(this.ValueAsString);
+				return new JValue(this.GetValue());
+			}
+
+			if (this.IsNull)
+			{
+				return null;
 			}
 
 			JObject jobject = new JObject();
-			foreach (var item in this.DataMembers)
+			if (this.IsCollection)
 			{
-				jobject.Add(item.Name, item.ToJsonToken());
+				JArray arr = new JArray();
+				foreach (var item in this.DataMembers)
+				{
+					arr.Add(item.ToJsonToken());
+				}
+
+				return arr;
+			}
+			else
+			{
+				foreach (var item in this.DataMembers)
+				{
+					jobject.Add(item.Name, item.ToJsonToken());
+				}
 			}
 
 			return jobject;

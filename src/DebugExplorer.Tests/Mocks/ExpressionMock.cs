@@ -1,13 +1,10 @@
 ﻿using EnvDTE;
+using Moq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections;
-using Xunit.Abstractions;
 
 namespace DebugExplorer.Tests.Mocks
 {
-	//https://stackoverflow.com/questions/30574322/memberdata-tests-show-up-as-one-test-instead-of-many
-	public class ExpressionMock : Expression, IXunitSerializable
+	public class ExpressionMock : Expression
 	{
 		public string Name { get; }
 
@@ -31,17 +28,29 @@ namespace DebugExplorer.Tests.Mocks
 
 		private ExpressionsCollectionMock _dataMembers = new ExpressionsCollectionMock();
 
-		[Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
-		public ExpressionMock()
-		{
-		}
-
-		public ExpressionMock(string name, object value)
+		public ExpressionMock(string name, object value, Type type = null)
 		{
 			this.Name = name;
-			this.Value = value?.ToString();
 			this.OriginalValue = value;
-			this.Type = value?.GetType().Name;
+
+			if (type != null)
+			{
+				this.Type = type.Name;
+			}
+			else
+			{
+				this.Type = value?.GetType().Name;
+			}
+
+			if (value is string s && type != null)
+			{
+				this.Value = $"\"{s}\"";
+			}
+			else
+			{
+				this.Value = value?.ToString();
+			}
+
 			this.JsonFomrat = JsonConvert.SerializeObject(value);
 		}
 
@@ -56,60 +65,20 @@ namespace DebugExplorer.Tests.Mocks
 			this._dataMembers.Add(new ExpressionMock(nameof(person.Age), person.Age));
 			this._dataMembers.Add(new ExpressionMock(nameof(person.Amount), person.Amount));
 
+			var tags = new ExpressionMock(nameof(person.Tags), "Count = 0", person.Tags.GetType());
+			this._dataMembers.Add(tags);
+
+			for (int i = 0; i < person.Tags.Count; i++)
+			{
+				tags._dataMembers.Add(new ExpressionMock($"[{i}]", person.Tags[i]));
+			}
+
 			this.JsonFomrat = JsonConvert.SerializeObject(person, Formatting.Indented);
 		}
 
 		public override string ToString()
 		{
 			return $"{Type}:{Value}";
-		}
-
-		public void Deserialize(IXunitSerializationInfo info)
-		{
-			info.GetValue<string>(nameof(Name));
-			info.GetValue<string>(nameof(Value));
-			info.GetValue<string>(nameof(Type));
-			info.GetValue<string>(nameof(JsonFomrat));
-		}
-
-		public void Serialize(IXunitSerializationInfo info)
-		{
-			info.AddValue(nameof(Name), Name);
-			info.AddValue(nameof(Value), Value);
-			info.AddValue(nameof(Type), Type);
-		}
-
-		public static ExpressionMock CreateExpressionObject()
-		{
-			ExpressionMock expression = new ExpressionMock();
-
-			throw new NotImplementedException();
-		}
-
-		public class ExpressionsCollectionMock : Expressions
-		{
-			public DTE DTE { get; }
-
-			public Debugger Parent { get; }
-
-			public int Count { get { return this._expressions.Count; } }
-
-			private List<ExpressionMock> _expressions = new List<ExpressionMock>();
-
-			public void Add(ExpressionMock exp)
-			{
-				this._expressions.Add(exp);
-			}
-
-			public Expression Item(object index)
-			{
-				throw new NotImplementedException();
-			}
-
-			public IEnumerator GetEnumerator()
-			{
-				return _expressions.GetEnumerator();
-			}
 		}
 	}
 }

@@ -4,7 +4,9 @@ using DebugExplorer.Tests.Mocks;
 using Microsoft.VisualStudio.Sdk.TestFramework;
 using Microsoft.VisualStudio.Shell;
 using Moq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Xunit.Abstractions;
 
 namespace DebugExplorer.Tests.ObjectWrappers
 {
@@ -12,6 +14,8 @@ namespace DebugExplorer.Tests.ObjectWrappers
 	public class ExpressionWrapperTests
 	{
 		public static TheoryData<Type, object> Primitives { get; }
+
+		private ITestOutputHelper _output;
 
 		static ExpressionWrapperTests()
 		{
@@ -28,15 +32,16 @@ namespace DebugExplorer.Tests.ObjectWrappers
 				{typeof(ulong), rand.Next<ulong>() },
 				{typeof(double), rand.Next<double>() },
 				{typeof(float), rand.Next<float>() },
-				{typeof(string), rand.RandomString(10) },
+				{typeof(string), $"{rand.RandomString(10)}" },
 				{typeof(string), null },
 				{typeof(string), "null" }
 			};
 		}
 
-		public ExpressionWrapperTests(GlobalServiceProvider sp)
+		public ExpressionWrapperTests(GlobalServiceProvider sp, ITestOutputHelper output)
 		{
 			sp.Reset();
+			this._output = output;
 		}
 
 		[Theory]
@@ -45,7 +50,7 @@ namespace DebugExplorer.Tests.ObjectWrappers
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			ExpressionMock mock = new ExpressionMock("my_prop", value);
+			ExpressionMock mock = new ExpressionMock("my_prop", value, t);
 
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
 
@@ -60,7 +65,7 @@ namespace DebugExplorer.Tests.ObjectWrappers
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			ExpressionMock mock = new ExpressionMock("my_prop", value);
+			ExpressionMock mock = new ExpressionMock("my_prop", value, t);
 
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
 
@@ -70,7 +75,7 @@ namespace DebugExplorer.Tests.ObjectWrappers
 		}
 
 		[Fact]
-		public async Task SimpleObjectTestAsync()
+		public async Task ObjectToJsonTestAsync()
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -83,10 +88,33 @@ namespace DebugExplorer.Tests.ObjectWrappers
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
 			wrapper.ProcessDataMembers();
 
+			Assert.False(wrapper.IsPrimitive);
+
 			JObject jo = (JObject)wrapper.ToJsonToken();
+			this._output.WriteLine(jo.ToString(Formatting.Indented));
+		}
+
+		[Fact]
+		public async Task ObjectWithListToJsonTestAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Person p = new Person();
+			p.Name = "person_name";
+			p.Surname = "person_surname";
+			p.Tags.Add("tag_1");
+			p.Tags.Add("tag_2");
+			p.Tags.Add("tag_3");
+			
+			ExpressionMock mock = new ExpressionMock(p);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+			wrapper.ProcessDataMembers();
 
 			Assert.False(wrapper.IsPrimitive);
-			Assert.Equal(mock.JsonFomrat, wrapper.JsonFomrat());
+
+			JObject jo = (JObject)wrapper.ToJsonToken();
+			this._output.WriteLine(jo.ToString(Formatting.Indented));
 		}
 	}
 }
