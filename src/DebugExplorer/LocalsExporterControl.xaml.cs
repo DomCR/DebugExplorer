@@ -4,9 +4,7 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Controls;
 
 namespace DebugExplorer
@@ -74,8 +72,15 @@ namespace DebugExplorer
 
 			if (selected == null) { return; }
 
-			selected.ProcessDataMembers();
-			this.JsonText = selected.JsonFomrat();
+			try
+			{
+				selected.ProcessDataMembers();
+				this.JsonText = selected.JsonFomrat();
+			}
+			catch (Exception ex)
+			{
+				this.JsonText = ex.ToString();
+			}
 		}
 
 		private void notifyPropertyChanged([CallerMemberName] string propertyName = null)

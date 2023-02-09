@@ -75,6 +75,28 @@ namespace DebugExplorer.Tests.ObjectWrappers
 		}
 
 		[Fact]
+		public async Task ListToJsonTestAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			List<string> list = new List<string>();
+			list.Add("a");
+			list.Add("b");
+			list.Add("c");
+			list.Add("d");
+
+			ExpressionMock mock = new ExpressionMock("my_list", list);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+			wrapper.ProcessDataMembers();
+
+			Assert.False(wrapper.IsPrimitive);
+
+			JObject jo = (JObject)wrapper.ToJsonToken();
+			this._output.WriteLine(jo.ToString(Formatting.Indented));
+		}
+
+		[Fact]
 		public async Task ObjectToJsonTestAsync()
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -105,7 +127,52 @@ namespace DebugExplorer.Tests.ObjectWrappers
 			p.Tags.Add("tag_1");
 			p.Tags.Add("tag_2");
 			p.Tags.Add("tag_3");
-			
+
+			ExpressionMock mock = new ExpressionMock(p);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+			wrapper.ProcessDataMembers();
+
+			Assert.False(wrapper.IsPrimitive);
+
+			JObject jo = (JObject)wrapper.ToJsonToken();
+			this._output.WriteLine(jo.ToString(Formatting.Indented));
+		}
+
+		[Fact]
+		public async Task ObjectWithDictionaryToJsonTestAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Person p = new Person();
+			p.Name = "person_name";
+			p.Surname = "person_surname";
+			p.Ids.Add(0, "my_id_0");
+			p.Ids.Add(1, "my_id_1");
+			p.Ids.Add(2, "my_id_2");
+
+			ExpressionMock mock = new ExpressionMock(p);
+
+			ExpressionWrapper wrapper = new ExpressionWrapper(mock);
+			wrapper.ProcessDataMembers();
+
+			Assert.False(wrapper.IsPrimitive);
+
+			JObject jo = (JObject)wrapper.ToJsonToken();
+			this._output.WriteLine(jo.ToString(Formatting.Indented));
+		}
+
+		[Fact]
+		public async Task ObjectWithInfiniteLoopToJsonTestAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Person p = new Person();
+			p.Name = "person_name";
+			p.Surname = "person_surname";
+
+			p.Family.Add(p);
+
 			ExpressionMock mock = new ExpressionMock(p);
 
 			ExpressionWrapper wrapper = new ExpressionWrapper(mock);

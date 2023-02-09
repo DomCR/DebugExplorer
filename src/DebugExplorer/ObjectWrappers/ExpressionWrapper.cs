@@ -16,7 +16,9 @@ namespace DebugExplorer.ObjectWrappers
 
 		private static int _maxDepth = 100;
 
-		private Regex _collectionFormat = new Regex("Count = \\d+");
+		private Regex _listFormat = new Regex("Count = \\d+");
+
+		private Regex _arrayFormat = new Regex(".*\\[]$");
 
 		public string Name { get; }
 
@@ -32,14 +34,23 @@ namespace DebugExplorer.ObjectWrappers
 				{
 					case "string":
 					case nameof(System.String):
+					case "byte":
 					case nameof(System.Byte):
+					case "short":
 					case nameof(System.Int16):
+					case "ushort":
 					case nameof(System.UInt16):
+					case "int":
 					case nameof(System.Int32):
+					case "uint":
 					case nameof(System.UInt32):
+					case "long":
 					case nameof(System.Int64):
+					case "ulong":
 					case nameof(System.UInt64):
+					case "double":
 					case nameof(System.Double):
+					case "float":
 					case nameof(System.Single):
 						return true;
 					default:
@@ -50,11 +61,13 @@ namespace DebugExplorer.ObjectWrappers
 
 		public bool IsNull { get { return this.ValueAsString.Equals("null"); } }
 
-		public bool IsCollection { get { return _collectionFormat.IsMatch(this.ValueAsString); } }
+		public bool IsCollection { get { return _listFormat.IsMatch(this.ValueAsString) || _arrayFormat.IsMatch(this.Type); } }
 
 		public List<ExpressionWrapper> Collection { get; } = new List<ExpressionWrapper>();
 
 		public List<ExpressionWrapper> DataMembers { get; private set; } = new List<ExpressionWrapper>();
+
+		private ExpressionWrapper _rawView;
 
 		private Expression _expression;
 
@@ -97,6 +110,12 @@ namespace DebugExplorer.ObjectWrappers
 				{
 					ExpressionWrapper member = new ExpressionWrapper(item);
 
+					if(member.Name == "Raw View")
+					{
+						this._rawView = member;
+						continue;
+					}
+
 					this.DataMembers.Add(member);
 					member.ProcessDataMembers(depth + 1);
 				}
@@ -116,22 +135,31 @@ namespace DebugExplorer.ObjectWrappers
 				case nameof(System.String):
 					string value = this.ValueAsString.Remove(0, 1).Remove(this.ValueAsString.Length - 2);
 					return value;
+				case "byte":
 				case nameof(System.Byte):
 					return byte.Parse(this.ValueAsString);
+				case "short":
 				case nameof(System.Int16):
 					return short.Parse(this.ValueAsString);
+				case "ushort":
 				case nameof(System.UInt16):
 					return ushort.Parse(this.ValueAsString);
+				case "int":
 				case nameof(System.Int32):
 					return int.Parse(this.ValueAsString);
+				case "uint":
 				case nameof(System.UInt32):
 					return uint.Parse(this.ValueAsString);
+				case "long":
 				case nameof(System.Int64):
 					return long.Parse(this.ValueAsString);
+				case "ulong":
 				case nameof(System.UInt64):
 					return ulong.Parse(this.ValueAsString);
+				case "double":
 				case nameof(System.Double):
 					return double.Parse(this.ValueAsString);
+				case "float":
 				case nameof(System.Single):
 					return float.Parse(this.ValueAsString);
 				default:
@@ -152,7 +180,7 @@ namespace DebugExplorer.ObjectWrappers
 				return sb.ToString();
 			}
 
-			JObject jobject = (JObject)this.ToJsonToken();
+			JToken jobject = this.ToJsonToken();
 			return jobject.ToString();
 		}
 
@@ -188,6 +216,11 @@ namespace DebugExplorer.ObjectWrappers
 			}
 
 			return jobject;
+		}
+
+		public override string ToString()
+		{
+			return $"Name: {this.Name} | Value: {this.ValueAsString}";
 		}
 	}
 }

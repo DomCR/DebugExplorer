@@ -42,7 +42,7 @@ namespace DebugExplorer.Tests.Mocks
 				this.Type = value?.GetType().Name;
 			}
 
-			if (value is string s && type != null)
+			if (value is string s && !s.StartsWith("Count ="))
 			{
 				this.Value = $"\"{s}\"";
 			}
