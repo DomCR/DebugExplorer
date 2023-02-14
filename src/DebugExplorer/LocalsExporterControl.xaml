@@ -9,17 +9,34 @@
              toolkit:Themes.UseVsTheme="True"
              d:DesignHeight="300" d:DesignWidth="300"
 			 DataContext="{Binding RelativeSource={RelativeSource Self}}"
-			 Name="MyToolWindow">
+			 Name="LocalsExporter">
 	<Grid>
-		<StackPanel Orientation="Horizontal">
-			<ListView ItemsSource="{Binding ExpressionWrappers}" SelectionChanged="listView_SelectionChanged">
+		<Grid >
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			
+			<ListView ItemsSource="{Binding ExpressionWrappers}" SelectionChanged="listView_SelectionChanged" ScrollViewer.CanContentScroll="True">
 				<ListView.View>
 					<GridView>
 						<GridViewColumn Header="Name" Width="120" DisplayMemberBinding="{Binding Name}" />
 					</GridView>
 				</ListView.View>
 			</ListView>
-			<TextBlock Text="{Binding JsonText}"/>
-		</StackPanel>
+			
+			<TabControl Grid.Column="1">
+				<TabItem Header="Json" IsSelected="True">
+					<TextBox Text="{Binding JsonFormat, Mode=OneWay}" 
+							 IsReadOnly="True"
+							 ScrollViewer.CanContentScroll="True"/>
+				</TabItem>
+				<TabItem Header="Xml" IsEnabled="False">
+					<TextBox Text="{Binding XmlFormat, Mode=OneWay}" 
+							 IsReadOnly="True"
+							 ScrollViewer.CanContentScroll="True"/>
+				</TabItem>
+			</TabControl>
+		</Grid>
 	</Grid>
 </UserControl>

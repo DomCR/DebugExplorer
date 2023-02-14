@@ -1,4 +1,5 @@
 ﻿using EnvDTE;
+using Microsoft.VisualStudio.PlatformUI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,6 +26,8 @@ namespace DebugExplorer.ObjectWrappers
 		public string Type { get; }
 
 		public string ValueAsString { get; }
+
+		public bool IsValid { get; }
 
 		public bool IsPrimitive
 		{
@@ -80,6 +83,8 @@ namespace DebugExplorer.ObjectWrappers
 			this.Name = expression.Name;
 			this.Type = expression.Type;
 			this.ValueAsString = expression.Value;
+
+			this.IsValid = expression.IsValidValue;
 		}
 
 		public void ProcessDataMembers(int depth = 0)
@@ -110,7 +115,7 @@ namespace DebugExplorer.ObjectWrappers
 				{
 					ExpressionWrapper member = new ExpressionWrapper(item);
 
-					if(member.Name == "Raw View")
+					if (member.Name == "Raw View")
 					{
 						this._rawView = member;
 						continue;

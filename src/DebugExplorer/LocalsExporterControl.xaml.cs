@@ -20,17 +20,29 @@ namespace DebugExplorer
 
 		public ObservableCollection<ExpressionWrapper> ExpressionWrappers { get; } = new ObservableCollection<ExpressionWrapper>();
 
-		public string JsonText
+		public string JsonFormat
 		{
-			get { return this._jsonText; }
+			get { return this._jsonFormat; }
 			private set
 			{
-				this._jsonText = value;
+				this._jsonFormat = value;
 				this.notifyPropertyChanged();
 			}
 		}
 
-		public string _jsonText;
+		public string XmlFormat
+		{
+			get { return this._xmlFormat; }
+			private set
+			{
+				this._xmlFormat = value;
+				this.notifyPropertyChanged();
+			}
+		}
+
+		private string _jsonFormat;
+
+		private string _xmlFormat;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LocalsExporterControl"/> class.
@@ -75,11 +87,11 @@ namespace DebugExplorer
 			try
 			{
 				selected.ProcessDataMembers();
-				this.JsonText = selected.JsonFomrat();
+				this.JsonFormat = selected.JsonFomrat();
 			}
 			catch (Exception ex)
 			{
-				this.JsonText = ex.ToString();
+				this.JsonFormat = ex.ToString();
 			}
 		}
 
